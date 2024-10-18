@@ -7,11 +7,10 @@ from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.uic import loadUi
 from PIL import Image
-from PyPDF4 import PdfFileMerger
+from pypdf import PdfWriter
 from natsort import natsorted
 import pathlib
 import shutil
-import time
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 TEMPDIR =  pathlib.Path(pathlib.Path.home(), 'Documents', '~temp')
@@ -288,7 +287,7 @@ class Pecha(object):
             if file.endswith(".pdf"):
                 pdfs.append(f'{TEMPDIRstacks}{file}')
 
-        merger = PdfFileMerger()
+        merger = PdfWriter()
 
         for pdf in pdfs:
             print(pdf)
