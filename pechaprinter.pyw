@@ -6,7 +6,7 @@ import subprocess
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.uic import loadUi
-from PIL import Image
+from PIL import Image, ImageDraw
 from pypdf import PdfWriter
 from natsort import natsorted
 import pathlib
@@ -17,6 +17,7 @@ TEMPDIR =  pathlib.Path(pathlib.Path.home(), 'Documents', '~temp')
 TEMPDIRroot = f'{TEMPDIR}{os.sep}'
 TEMPDIRimgs = f'{TEMPDIRroot}imgs{os.sep}'
 TEMPDIRstacks = f'{TEMPDIRroot}stacks{os.sep}'
+debug = False
 
 class Pecha(object):
     def __init__(self):
@@ -38,7 +39,7 @@ class Pecha(object):
         self.tempJpgsNumber = 0
         self.totalPages = 0
         self.difference = 0
-        self.aspectRatio = 3508 / 827
+        self.aspectRatio = 7016 / 2339
         self.optimalWidth = 0
         self.optimalHeight = 0
         self.optimalHeightTotal = 0
@@ -154,9 +155,9 @@ class Pecha(object):
     def resizeImages(self):
         if self.outputSize == "A4":
             self.optimalWidth, self.optimalHeight, self.optimalHeightTotal = (
-                3508,
-                827,
-                2481,
+                7961,
+                2339,
+                7016,
             )
         elif self.outputSize == "A3":
             self.optimalWidth, self.optimalHeight, self.optimalHeightTotal = (
@@ -272,6 +273,15 @@ class Pecha(object):
                     finalPage.paste(self.imageStacks[2][i], (0, 0))
                     pass
                 pass
+            if debug:
+                draw = ImageDraw.Draw(finalPage)
+                w, h = finalPage.size
+                lines = [
+                    ((0, h/3), (w, h/3)),
+                    ((0, (h/3)*2), (w, (h/3)*2))
+                ]
+                for l in lines:
+                    draw.line(l, fill='red', width=3)
             finalPage.save(f'{TEMPDIRstacks}{i:04}.pdf')
 
     def savePdf(self):
