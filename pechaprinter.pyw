@@ -132,7 +132,7 @@ class Pecha(object):
             [
                 self.pdftoppmLocation,
                 '-r',
-                '300',
+                '600',
                 self.inputLocation,
                 TEMPDIRimgs,
             ],
@@ -275,27 +275,36 @@ class Pecha(object):
             finalPage.save(f'{TEMPDIRstacks}{i:04}.pdf')
 
     def savePdf(self):
-        self.message = 'Saving images'
-        print(self.message)
+        message = 'Saving images'
+        print(message)
 
-        self.outputPath = f'{self.outputLocation}{self.outputName}.pdf'
+        outputPath_odd = f'{self.outputLocation}{self.outputName}_odd.pdf'
+        outputPath_even = f'{self.outputLocation}{self.outputName}_even.pdf'
+
         # delete previous to replace
-        if os.path.exists(self.outputPath):
-            os.remove(self.outputPath)
+        for p in [outputPath_even, outputPath_odd]:
+            if os.path.exists(p):
+                os.remove(p)
+
         pdfs = []
         for file in os.listdir(TEMPDIRstacks):
             if file.endswith(".pdf"):
                 pdfs.append(f'{TEMPDIRstacks}{file}')
 
-        merger = PdfWriter()
-
-        for pdf in pdfs:
+        merger_odd = PdfWriter()
+        merger_even = PdfWriter()
+        for i, pdf in enumerate(sorted(pdfs)):
             print(pdf)
-            merger.append(pdf)
+            if i & 1 == 0:  # even page, not even number
+                merger_even.append(pdf)
+            else:
+                merger_odd.append(pdf)
 
         # save pdf
-        merger.write(self.outputPath)
-        merger.close()
+        merger_even.write(outputPath_even)
+        merger_even.close()
+        merger_odd.write(outputPath_odd)
+        merger_odd.close()
 
 class Ui(QtWidgets.QDialog):
     def __init__(self):
