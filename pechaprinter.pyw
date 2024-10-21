@@ -18,6 +18,9 @@ TEMPDIRroot = f'{TEMPDIR}{os.sep}'
 TEMPDIRimgs = f'{TEMPDIRroot}imgs{os.sep}'
 TEMPDIRstacks = f'{TEMPDIRroot}stacks{os.sep}'
 debug = False
+printer_adjustment_odd_pages = True
+adjustment = 1  # in cm
+adjustment = adjustment * 118  # for a resolution of 300 dpi
 
 class Pecha(object):
     def __init__(self):
@@ -39,7 +42,7 @@ class Pecha(object):
         self.tempJpgsNumber = 0
         self.totalPages = 0
         self.difference = 0
-        self.aspectRatio = 7016 / 2339
+        self.aspectRatio = 3508 / 827
         self.optimalWidth = 0
         self.optimalHeight = 0
         self.optimalHeightTotal = 0
@@ -155,9 +158,9 @@ class Pecha(object):
     def resizeImages(self):
         if self.outputSize == "A4":
             self.optimalWidth, self.optimalHeight, self.optimalHeightTotal = (
-                7961,
-                2339,
-                7016,
+                3508,
+                827,
+                2481,
             )
         elif self.outputSize == "A3":
             self.optimalWidth, self.optimalHeight, self.optimalHeightTotal = (
@@ -274,47 +277,50 @@ class Pecha(object):
                     pass
                 pass
             if debug:
+                line_width = 2
                 draw = ImageDraw.Draw(finalPage)
                 w, h = finalPage.size
                 lines = [
+                    ((line_width, 0), (w, line_width)),
                     ((0, h/3), (w, h/3)),
-                    ((0, (h/3)*2), (w, (h/3)*2))
+                    ((0, (h/3)*2), (w, (h/3)*2)),
+                    ((0, h-line_width), (w, h-line_width))
                 ]
                 for l in lines:
-                    draw.line(l, fill='red', width=3)
+                    draw.line(l, fill='lightgray', width=line_width)
+
+            if printer_adjustment_odd_pages:
+                if i % 2 != 0:
+                    adjusted = Image.new(
+                        "RGB", (self.optimalWidth, self.optimalHeightTotal), "white"
+                    )
+                    adjusted.paste(finalPage, (0, adjustment))
+                    finalPage = adjusted
             finalPage.save(f'{TEMPDIRstacks}{i:04}.pdf')
 
     def savePdf(self):
         message = 'Saving images'
         print(message)
 
-        outputPath_odd = f'{self.outputLocation}{self.outputName}_odd.pdf'
-        outputPath_even = f'{self.outputLocation}{self.outputName}_even.pdf'
+        outputPath = f'{self.outputLocation}{self.outputName}.pdf'
 
         # delete previous to replace
-        for p in [outputPath_even, outputPath_odd]:
-            if os.path.exists(p):
-                os.remove(p)
+        if os.path.exists(outputPath):
+            os.remove(outputPath)
 
         pdfs = []
         for file in os.listdir(TEMPDIRstacks):
             if file.endswith(".pdf"):
                 pdfs.append(f'{TEMPDIRstacks}{file}')
 
-        merger_odd = PdfWriter()
-        merger_even = PdfWriter()
-        for i, pdf in enumerate(sorted(pdfs)):
+        merger = PdfWriter()
+        for pdf in sorted(pdfs):
             print(pdf)
-            if i & 1 == 0:  # even page, not even number
-                merger_even.append(pdf)
-            else:
-                merger_odd.append(pdf)
+            merger.append(pdf)
 
         # save pdf
-        merger_even.write(outputPath_even)
-        merger_even.close()
-        merger_odd.write(outputPath_odd)
-        merger_odd.close()
+        merger.write(outputPath)
+        merger.close()
 
 class Ui(QtWidgets.QDialog):
     def __init__(self):
